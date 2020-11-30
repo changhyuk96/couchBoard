@@ -1,0 +1,30 @@
+package couchBoard.util;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.filter.CharacterEncodingFilter;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter{
+	
+	@Override
+	protected void configure(HttpSecurity http) throws Exception{
+		http
+			.cors().disable()					// cors 방지
+			.csrf().disable()					// csrf 방지
+			.formLogin().disable()				// 기본 로그인페이지 제거
+			.headers().frameOptions().disable();// X-Frame-Option 비활성화
+	}
+	
+	@Bean
+	public PasswordEncoder passEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+	
+}
