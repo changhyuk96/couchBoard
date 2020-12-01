@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.couchbase.client.java.json.JsonObject;
 
@@ -20,7 +21,9 @@ public class UserController {
 	@RequestMapping(value="/", method=RequestMethod.GET)
 	public Object hiTest() {
 		
-		return "Hi Guest";
+		ModelAndView mv = new ModelAndView("index");
+		
+		return mv;
 	}
 	
 	//curl -u Administrator:pass123 -H "content-type:application/json" http://localhost:8080/users -X POST -d {\"username\":\"ckdgur123\",\"password\":\"ckd123\"}

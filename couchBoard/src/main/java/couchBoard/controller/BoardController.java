@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.couchbase.client.java.json.JsonObject;
@@ -36,8 +37,8 @@ public class BoardController {
 		return boardService.writeBoard(json);
 	}
 	
-	@RequestMapping(value="/boards/{id}", method=RequestMethod.GET)
-	public Object getBoardList(@PathVariable String id) {
+	@RequestMapping(value="/boards/{id}", method=RequestMethod.POST)
+	public Object getBoard(@PathVariable String id) {
 		
 		return boardService.getBoard(id);
 	}
@@ -66,7 +67,7 @@ public class BoardController {
 		catch(Exception e) {
 			return e.toString();
 		}
-		
+		System.out.println(user);
 		return boardService.deleteBoard(id,boardNum,user);
 	}
 }

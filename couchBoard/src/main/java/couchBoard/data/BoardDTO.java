@@ -8,7 +8,14 @@ public class BoardDTO {
 	private String content;
 	private String username;
 	private String writeTime;
+	private int hits;
 	
+	public int getHits() {
+		return hits;
+	}
+	public void setHits(int hits) {
+		this.hits = hits;
+	}
 	public int getBoardNum() {
 		return boardNum;
 	}
