@@ -56,6 +56,16 @@ public class BoardController {
 		return boardService.updateBoard(id, json);
 	}
 	
+	@RequestMapping(value="/boards/{id}/{boardNum}", method=RequestMethod.PUT)
+	public void updateHits(@PathVariable String id,@PathVariable String boardNum) {
+		
+		if(!(boolean)boardService.updateHits(id))
+			System.out.println("Hits Error.");
+		
+		
+		return;
+	}
+	
 	@RequestMapping(value="/boards/{id}/{boardNum}", method=RequestMethod.DELETE)
 	public Object deleteBoard(@PathVariable String id,@PathVariable String boardNum,
 								@RequestBody String username) {

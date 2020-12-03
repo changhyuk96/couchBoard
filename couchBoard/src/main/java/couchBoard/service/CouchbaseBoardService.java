@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Cluster;
@@ -16,6 +17,7 @@ import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.kv.GetResult;
 import com.couchbase.client.java.kv.MutateInSpec;
 import com.couchbase.client.java.kv.Upsert;
+import com.couchbase.client.java.query.QueryOptions;
 import com.couchbase.client.java.query.QueryResult;
 
 import couchBoard.data.BoardDTO;
@@ -130,7 +132,8 @@ public class CouchbaseBoardService {
 	public Object updateBoard(String id, JsonObject json) {
 		
 		try {
-			boardCollection.replace(id, json);
+			boardCollection.mutateIn(id, Collections.singletonList(MutateInSpec.replace("content", json.get("content"))));
+			boardCollection.mutateIn(id, Collections.singletonList(MutateInSpec.replace("title", json.get("title"))));
 		}catch(DocumentNotFoundException e) {
 			return "The post does not exists.";
 		}catch(Exception e) {
@@ -138,6 +141,26 @@ public class CouchbaseBoardService {
 		}
 		
 		return "The post has been updated.";
+	}
+	
+	public Object updateHits(String id) {
+		try {
+//			QueryResult result = cluster.query("update `myApp`._default.board set hits=hits+1 where id = $id"
+//													,QueryOptions.queryOptions().parameters(JsonObject.create().put("id", id)));
+//			GetResult result = boardCollection.get(id);
+//			JsonObject json = result.contentAsObject();
+//			json.put("hits", json.getInt("hits")+1);
+//			boardCollection.replace(id, json);
+			
+			boardCollection.mutateIn(id, Collections.singletonList(MutateInSpec.increment("hits", 1)));
+		}catch(DocumentNotFoundException e) {
+			e.printStackTrace();
+			return "The post does not exists.";
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return true;
 	}
 	
 	

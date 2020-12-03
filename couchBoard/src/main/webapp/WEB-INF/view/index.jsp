@@ -34,10 +34,10 @@
     white-space: pre;
 }
 </style>
-	
+<%
+	session.setAttribute("username", "test123");
+%>
 <script>
-	
-	sessionStorage.setItem("username","test123");
 	
 	let tb = new Array();
 	
@@ -80,8 +80,8 @@
 		
 		$.each(bufferTb, function(idx,val) {
 			html += '<tr><td>'+val.boardNum+'</td>';
-			html += '<td>'+val.username+'</td>';
 			html += '<td>'+val.title+'</td>';
+			html += '<td>'+val.username+'</td>';
 			html += '<td>'+val.writeTime+'</td>';
 			html += '<td>'+val.hits+'</td>';
 			html += '<input type="hidden" name=boardId id=boardId value='+val.id+'></tr>';
@@ -93,29 +93,48 @@
 		// boardDetailButton
 		$("#boardListTbody tr").click(function(){
 			let boardId = $(this).find("[name=boardId]").val();
-
+			let boardNum = $(this).children().eq(0).text();
+			// 조회수 Update
 			$.ajax({
-				url:'/boards/'+boardId,
-				type:'POST',
+				url:'/boards/'+boardId+'/'+boardNum,
+				type:'PUT',
+				contentType:'application/json',
 				success:function(data){
-					$('.boardList').css('display','none');
-					$('#firstButton').css('display','none');
-					$('.boardDetail').css('display','inline-block');
-					
-					$('#detailUsernameValue').text(data.username);
-					$('#detailTitleValue').text(data.title);
-					$('#detailContentValue').text(data.content);
-					$('#detailHitsValue').text(data.hits);
-					$('#detailWriteTimeValue').text(data.writeTime);
-					
-					$('#detailBoardId').val(data.id);
-					$('#detailBoardNum').val(data.boardNum);
-					
-				},
-				error:function(request,status,error){
-					alert(error);
+					boardDetailView(boardId,boardNum);
 				}
-			});
+			}); 
+			
+		});
+	}
+	
+	function boardDetailView(boardId,boardNum){
+		$.ajax({
+			url:'/boards/'+boardId,
+			type:'POST',
+			success:function(data){
+				$('.boardList').css('display','none');
+				$('#firstButton').css('display','none');
+				$('.boardDetail').css('display','inline-block');
+				
+				$('#detailUsernameValue').text(data.username);
+				$('#detailTitleValue').text(data.title);
+				$('#detailContentValue').text(data.content);
+				$('#detailHitsValue').text(data.hits);
+				$('#detailWriteTimeValue').text(data.writeTime);
+				
+				$('#detailBoardId').val(data.id);
+				$('#detailBoardNum').val(data.boardNum);
+				
+				if($('#detailUsernameValue').text()=='<%=session.getAttribute("username")%>'){
+					let btnListHtml = '';
+					btnListHtml += '<button style=margin:5px; class="btn btn-primary pull-right" type=button onclick="boardUpdateButton()">수정</button>';
+					btnListHtml += '<button style=margin:5px; class="btn btn-primary pull-right" type=button onclick="boardDeleteButton()">삭제</button>';
+					$('#btnList').prepend(btnListHtml);
+				}
+			},
+			error:function(request,status,error){
+				alert(error);
+			}
 		});
 	}
 	
@@ -123,7 +142,8 @@
 		$('.boardList').css('display','none');
 		$('.boardWrite').css('display','inline-block');
 		$('#firstButton').css('display','none');
-		$('.usernameValue').text(sessionStorage.getItem("username"));
+		$('.usernameValue').text('<%=session.getAttribute("username") %>');
+		$('#actionValue').val(0);
 	}
 	
 	function boardWriteButton(){
@@ -136,7 +156,13 @@
 			return;
 		}
 		
- 		$.ajax({
+		if($('#actionValue').val()==1){
+			boardUpdateAction(data);
+			return;
+		}
+		delete data.updateBoardId;
+
+	 	$.ajax({
 			url:'/boards',
 			type:'POST',
 			contentType:'application/json',
@@ -154,10 +180,16 @@
 	}
 	
 	function boardDeleteButton(){
+		
+		if(!confirm('삭제하시겠습니까?')){
+			return false;
+		}
+		
 		let bufBoardId = $('#detailBoardId').val();
 		let bufBoardNum = $('#detailBoardNum').val();
 		let userObject = {username:$('#detailUsernameValue').text()};
-		console.log(userObject);
+		
+		
 		$.ajax({
 			url:'/boards/'+bufBoardId+'/'+bufBoardNum,
 			type:'DELETE',
@@ -175,6 +207,40 @@
 			}
 			
 		}); 
+	}
+	
+	function boardUpdateButton(){
+		$('.boardDetail').css('display','none');
+		$('.boardWrite').css('display','inline-block');
+		
+		$('.usernameValue').text($('#detailUsernameValue').text());
+		$('#title').val($('#detailTitleValue').text());
+		$('#content').text($('#detailContentValue').text());
+		$('#updateBoardId').val($('#detailBoardId').val());
+		$('#updateBoardNum').val($('#detailBoardNum').val());
+		
+		$('#actionValue').val('1');
+		
+	}
+	
+	function boardUpdateAction(data){
+		let boardId = data.updateBoardId;
+		delete data.updateBoardId;
+  	 	$.ajax({
+			url:'/boards/'+boardId,
+			type:'PUT',
+			contentType:'application/json',
+			data:JSON.stringify(data),
+			success:function(data){
+				alert(data);
+				location.reload();
+			},
+			error:function(request,status,error){
+				console.log(error);
+				console.log(request);
+				console.log(status);
+			}
+	 	}); 
 	}
 
 	// Form > JsonObject
@@ -252,6 +318,7 @@
 				
 		</table>
 		<textarea id=content name=content class="form-control col-sm-5" rows="10"></textarea>
+		<input type="hidden" name=updateBoardId id=updateBoardId>
 		<button style=margin:5px; class="btn btn-primary pull-right" type=button onclick="boardWriteButton()">작성</button>
 		<button style=margin:5px; class="btn btn-primary pull-right" type=button onclick="location.reload()">돌아가기</button>
 	</form>
@@ -287,9 +354,10 @@
 	<textarea id=detailContentValue name=detailContentValue class="form-control col-sm-5" rows="10" readonly ></textarea>
 	<input type="hidden" name=detailBoardId id=detailBoardId>
 	<input type="hidden" name=detailBoardNum id=detailBoardNum>
-	<button style=margin:5px; class="btn btn-primary pull-right" type=button onclick="boardDeleteButton()">삭제</button>
-	<button style=margin:5px; class="btn btn-primary pull-right" type=button onclick="()">수정</button>
-	<button style=margin:5px; class="btn btn-primary pull-right" type=button onclick="location.reload()">돌아가기</button>
+	<input type="hidden" name=actionValue id=actionValue>
+	<div id=btnList>
+		<button style=margin:5px; class="btn btn-primary pull-right" type=button onclick="location.reload()">돌아가기</button>
+	</div>
 </div>
 
 </body>
